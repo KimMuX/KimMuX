@@ -1,0 +1,240 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: FeedScreen(),
+    );
+  }
+}
+
+class FeedScreen extends StatefulWidget {
+  @override
+  _FeedScreenState createState() => _FeedScreenState();
+}
+
+class _FeedScreenState extends State<FeedScreen> {
+  final List<Map<String, dynamic>> feedItems = [
+    {
+      'text': 'หอ อุบ หลุม แก้ไขให้ด้วย',
+      'images': ['assets/11.jpg', 'assets/12.jpg'],
+      'profileImage': 'assets/pro1.png',
+      'username': 'ผู้ใช้ 1',
+      'time': '2 ชั่วโมงที่แล้ว',
+      'textStyle': const TextStyle(
+        fontSize: 16,
+      ),
+      'comments':
+          [], // เก็บคอมเมนต์ในรูปแบบ [{ 'username': '...', 'comment': '...' }]
+    },
+    {
+      'text': 'ขยะ',
+      'images': ['assets/11.jpg', 'assets/12.jpg'],
+      'profileImage': 'assets/pro2.jpg',
+      'username': 'ผู้ใช้ 2',
+      'time': '5 ชั่วโมงที่แล้ว',
+      'textStyle': const TextStyle(
+        fontSize: 16,
+      ),
+      'comments': [],
+    },
+    // เพิ่มไอเท็มในฟีดเพิ่มเติมที่นี่
+  ];
+
+  // ตัวแปรสำหรับเก็บค่าที่ผู้ใช้พิมพ์ในช่อง comment
+  String commentText = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 201, 28, 28),
+        title: const Text('ฟีด',
+            style: TextStyle(color: Colors.white, fontSize: 21)),
+      ),
+      body: ListView.builder(
+        itemCount: feedItems.length,
+        itemBuilder: (context, index) {
+          return Card(
+            margin: const EdgeInsets.all(15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage:
+                        AssetImage(feedItems[index]['profileImage']!),
+                  ),
+                  title: Text(feedItems[index]['username']!),
+                  subtitle: Text(feedItems[index]['time']!),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text(
+                    feedItems[index]['text']!,
+                    style: feedItems[index]['textStyle'],
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ImageViewScreen(
+                          images: feedItems[index]['images'],
+                        ),
+                      ),
+                    );
+                  },
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(15.0),
+                        child: Image.asset(
+                          feedItems[index]['images'][0],
+                          width: double.infinity,
+                          height: 300,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      if (feedItems[index]['images'].length > 1)
+                        Positioned(
+                          right: 10,
+                          bottom: 10,
+                          child: Container(
+                            color: Colors.black54,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            child: Text(
+                              '+${feedItems[index]['images'].length - 1} รูปภาพ',
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 16),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // แสดงคอมเมนต์ที่มีอยู่
+                if (feedItems[index]['comments'].isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (var comment in feedItems[index]['comments'])
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text.rich(
+                              TextSpan(
+                                text: '${comment['username']}: ',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                                children: [
+                                  TextSpan(
+                                    text: comment['comment'],
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.normal),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 10),
+                // ปุ่ม comment
+                TextButton(
+                  onPressed: () {
+                    _showCommentDialog(index);
+                  },
+                  child: const Text('แสดงความคิดเห็น'),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ฟังก์ชันสำหรับแสดง Dialog ให้ผู้ใช้กรอกความคิดเห็น
+  Future<void> _showCommentDialog(int index) async {
+    commentText = ''; // เคลียร์ค่า commentText ให้ว่างเพื่อรับค่าใหม่
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('แสดงความคิดเห็น'),
+        content: TextField(
+          onChanged: (value) {
+            commentText =
+                value; // เมื่อมีการเปลี่ยนแปลงในช่อง comment ให้เก็บค่าไว้ใน commentText
+          },
+          decoration: const InputDecoration(
+            hintText: 'ใส่ความคิดเห็นของคุณที่นี่',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // ปิด Dialog โดยไม่ทำอะไร
+            },
+            child: const Text('ยกเลิก'),
+          ),
+          TextButton(
+            onPressed: () {
+              // เพิ่มคอมเมนต์ไปยังรายการ feedItems
+              setState(() {
+                feedItems[index]['comments'].add({
+                  'username':
+                      'ผู้ใช้', // สามารถเปลี่ยนเป็นชื่อผู้ใช้ที่เกี่ยวข้องได้
+                  'comment': commentText,
+                });
+              });
+              Navigator.of(context)
+                  .pop(); // ปิด Dialog หลังจากเพิ่มคอมเมนต์เรียบร้อยแล้ว
+            },
+            child: const Text('ตกลง'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ImageViewScreen extends StatelessWidget {
+  final List<String> images;
+
+  const ImageViewScreen({super.key, required this.images});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 201, 28, 28),
+        title: const Text('ดูรูปภาพ',
+            style: TextStyle(color: Colors.white, fontSize: 21)),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: PageView.builder(
+        itemCount: images.length,
+        itemBuilder: (context, index) {
+          return Center(
+            child: Image.asset(images[index]),
+          );
+        },
+      ),
+    );
+  }
+}
